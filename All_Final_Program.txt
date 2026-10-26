@@ -1,0 +1,3250 @@
+/************   Website 1 [demoqa.com]  *************/
+import java.time.Duration;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class Website1 {
+	public static void main(String[] args) throws Exception {
+		WebDriver driver = new ChromeDriver();
+		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+
+		try {
+			driver.manage().window().maximize();
+			driver.get("https://demoqa.com/webtables");
+
+			// 1. Click "Add" button (scroll first to avoid ads blocking the click)
+			WebElement addBtn = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("addNewRecordButton")));
+			((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", addBtn);
+			wait.until(ExpectedConditions.elementToBeClickable(addBtn)).click();
+
+			// 2. Fill the registration form
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("firstName"))).sendKeys("Niyati");
+			driver.findElement(By.id("lastName")).sendKeys("Patel");
+			driver.findElement(By.id("userEmail")).sendKeys("niyatipatel@gmail.com");
+			driver.findElement(By.id("age")).sendKeys("21");
+			driver.findElement(By.id("salary")).sendKeys("500000");
+			driver.findElement(By.id("department")).sendKeys("MCA");
+
+			// 3. Submit and wait for the form to close
+			driver.findElement(By.id("submit")).click();
+			wait.until(ExpectedConditions.invisibilityOfElementLocated(By.className("modal-content")));
+
+			// 4. Search the record
+			WebElement searchBox = driver.findElement(By.id("searchBox"));
+			searchBox.sendKeys("Radhika");
+
+			// 5. Verify the TABLE shows the record
+			WebElement tableBody = driver.findElement(By.className("rt-tbody"));
+			String tableText = tableBody.getText();
+
+			if (tableText.contains("Radhika") && tableText.contains("amipararadhika@gmail.com")) {
+				System.out.println("Record added and searched successfully | PASS");
+			} else {
+				System.out.println("Record not found in table | FAIL");
+			}
+
+			Thread.sleep(3000); // only to see the result in the browser
+		} catch (Exception e) {
+			System.out.println("Test FAILED due to error: " + e.getMessage());
+		} finally {
+			driver.quit();
+		}
+	}
+}
+
+
+
+
+/************* Website 3 [ demowebshop.tricentis.com ]**************/
+import java.time.Duration;
+import java.util.List;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class Website3 {
+
+	static void check(String step, boolean condition) {
+		System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+	}
+
+	static void clickWhenReady(WebDriverWait wait, By locator) {
+		wait.until(ExpectedConditions.elementToBeClickable(locator)).click();
+	}
+
+	public static void main(String[] args) throws Exception {
+
+		ChromeOptions options = new ChromeOptions();
+		options.addArguments("--disable-notifications");
+
+		WebDriver driver = new ChromeDriver(options);
+		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+
+		try {
+			driver.manage().window().maximize();
+			driver.get("https://demowebshop.tricentis.com/");
+
+			// 1. Register (unique email every run)
+			clickWhenReady(wait, By.xpath("//a[@href='/register']"));
+
+			String email = "niyati" + System.currentTimeMillis() + "@gmail.com";
+			wait.until(ExpectedConditions.elementToBeClickable(By.id("gender-female"))).click();
+			driver.findElement(By.id("FirstName")).sendKeys("Niyati");
+			driver.findElement(By.id("LastName")).sendKeys("Patel");
+			driver.findElement(By.id("Email")).sendKeys(email);
+			driver.findElement(By.id("Password")).sendKeys("Niyati@12");
+			driver.findElement(By.id("ConfirmPassword")).sendKeys("Niyati@12");
+			driver.findElement(By.id("register-button")).click();
+
+			String regMsg = wait.until(ExpectedConditions.visibilityOfElementLocated(
+					By.cssSelector("div.result"))).getText();
+			check("Registration completed", regMsg.contains("registration completed"));
+
+			clickWhenReady(wait, By.className("register-continue-button"));
+
+			// 2. Computers > Desktops
+			clickWhenReady(wait, By.xpath("//ul[@class='top-menu']//a[@href='/computers']"));
+			clickWhenReady(wait, By.xpath("//div[@class='sub-category-grid']//a[contains(@href,'desktops')]"));
+			check("Desktops page opened", driver.getCurrentUrl().contains("desktops"));
+
+			// 3. Open product and add to cart
+			clickWhenReady(wait, By.xpath("//a[@href='/build-your-cheap-own-computer']"));
+			clickWhenReady(wait, By.id("add-to-cart-button-72"));
+
+			String note = wait.until(ExpectedConditions.visibilityOfElementLocated(
+					By.cssSelector("#bar-notification .content"))).getText();
+			check("Product added to cart", note.contains("added to your shopping cart"));
+
+			// 4. Cart > terms > checkout
+			clickWhenReady(wait, By.cssSelector("a.ico-cart"));
+			clickWhenReady(wait, By.id("termsofservice"));
+			clickWhenReady(wait, By.id("checkout"));
+
+			// 5. Billing address
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("BillingNewAddress_Company")))
+					.sendKeys("TCS");
+			new Select(driver.findElement(By.id("BillingNewAddress_CountryId"))).selectByVisibleText("India");
+			driver.findElement(By.id("BillingNewAddress_City")).sendKeys("Ahmedabad");
+			driver.findElement(By.id("BillingNewAddress_Address1")).sendKeys("Vaishnodevi");
+			driver.findElement(By.id("BillingNewAddress_ZipPostalCode")).sendKeys("980001");
+			driver.findElement(By.id("BillingNewAddress_PhoneNumber")).sendKeys("9876543210");
+			clickWhenReady(wait, By.cssSelector("input[onclick='Billing.save()']"));
+
+			// 6. Shipping address (skipped by the site when "ship to same address" is ticked)
+			By shipAddr = By.cssSelector("input[onclick='Shipping.save()']");
+			By shipMethod = By.cssSelector("input[onclick='ShippingMethod.save()']");
+			wait.until(ExpectedConditions.or(
+					ExpectedConditions.elementToBeClickable(shipAddr),
+					ExpectedConditions.elementToBeClickable(shipMethod)));
+			List<WebElement> shipBtn = driver.findElements(shipAddr);
+			if (!shipBtn.isEmpty() && shipBtn.get(0).isDisplayed()) {
+				shipBtn.get(0).click();
+			}
+
+			// 7. Shipping method, payment method, payment info, confirm
+			clickWhenReady(wait, shipMethod);
+			clickWhenReady(wait, By.cssSelector("input[onclick='PaymentMethod.save()']"));
+			clickWhenReady(wait, By.cssSelector("input[onclick='PaymentInfo.save()']"));
+			clickWhenReady(wait, By.cssSelector("input[onclick='ConfirmOrder.save()']"));
+
+			// 8. Thank you page
+			String msg = wait.until(ExpectedConditions.visibilityOfElementLocated(
+					By.tagName("h1"))).getText();
+			check("Thank you page shown", msg.equalsIgnoreCase("Thank you"));
+
+			String done = driver.findElement(By.cssSelector("div.order-completed")).getText();
+			check("Order processed successfully", done.contains("successfully processed"));
+
+			Thread.sleep(3000); // only to see the result before the browser closes
+
+		} catch (Exception e) {
+			System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+		} finally {
+			driver.quit();
+		}
+	}
+}
+
+
+
+
+
+/************* Website 4 [ saucedemo.com ]**************/
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+
+public class Website4 {
+
+    static Scanner sc = new Scanner(System.in);
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    // Enter dabavo tyare aagal vadhse
+    static void next(String nextStep) {
+        System.out.println("\n>>> Have aagal: " + nextStep + "  (Enter dabavo)");
+        sc.nextLine();
+    }
+
+    public static void main(String[] args) {
+
+        ChromeOptions options = new ChromeOptions();
+        options.setExperimentalOption("detach", true);
+        options.setExperimentalOption("prefs", Map.of(
+                "credentials_enable_service", false,
+                "profile.password_manager_enabled", false,
+                "profile.password_manager_leak_detection", false));
+
+        WebDriver driver = new ChromeDriver(options);
+        driver.manage().window().maximize();
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        String baseUrl = "https://www.saucedemo.com/";
+
+        // ---------- START: Website turant khulse (Enter ni jarur nathi) ----------
+        driver.get(baseUrl);
+        check("Website opened, Title is Swag Labs", driver.getTitle().equals("Swag Labs"));
+
+        // ---------- 1. Empty username ----------
+        next("1. Username khali rakhine login");
+        driver.findElement(By.id("password")).sendKeys("secret_sauce");
+        driver.findElement(By.id("login-button")).click();
+        String error = driver.findElement(By.cssSelector("[data-test='error']")).getText();
+        check("Empty username error", error.contains("Username is required"));
+
+        // ---------- 2. Locked user ----------
+        next("2. Locked user login");
+        driver.get(baseUrl);
+        driver.findElement(By.id("user-name")).sendKeys("locked_out_user");
+        driver.findElement(By.id("password")).sendKeys("secret_sauce");
+        driver.findElement(By.id("login-button")).click();
+        error = driver.findElement(By.cssSelector("[data-test='error']")).getText();
+        check("Locked user error", error.contains("locked out"));
+
+        // ---------- 3. Wrong password ----------
+        next("3. Wrong password login");
+        driver.get(baseUrl);
+        driver.findElement(By.id("user-name")).sendKeys("standard_user");
+        driver.findElement(By.id("password")).sendKeys("wrong_password");
+        driver.findElement(By.id("login-button")).click();
+        error = driver.findElement(By.cssSelector("[data-test='error']")).getText();
+        check("Wrong password error", error.contains("do not match"));
+
+        // ---------- 4. Sacho login ----------
+        next("4. Sacho login");
+        driver.get(baseUrl);
+        driver.findElement(By.id("user-name")).sendKeys("standard_user");
+        driver.findElement(By.id("password")).sendKeys("secret_sauce");
+        driver.findElement(By.id("login-button")).click();
+        check("Login successful", driver.getCurrentUrl().contains("inventory.html"));
+
+        // ---------- 5. Products ----------
+        next("5. Products list batavo");
+        List<WebElement> names = driver.findElements(By.className("inventory_item_name"));
+        List<WebElement> prices = driver.findElements(By.className("inventory_item_price"));
+        for (int i = 0; i < names.size(); i++) {
+            System.out.println((i + 1) + ". " + names.get(i).getText() + " - " + prices.get(i).getText());
+        }
+        check("6 products dekhay che", names.size() == 6);
+
+        // ---------- 6. Add to cart ----------
+        next("6. Cart ma 2 product add karo");
+        driver.findElement(By.id("add-to-cart-sauce-labs-backpack")).click();
+        driver.findElement(By.id("add-to-cart-sauce-labs-bike-light")).click();
+        String badge = driver.findElement(By.className("shopping_cart_badge")).getText();
+        check("Cart badge = 2", badge.equals("2"));
+
+        // ---------- 7. Cart open ----------
+        next("7. Cart kholo ane verify karo");
+        driver.findElement(By.className("shopping_cart_link")).click();
+        check("Cart page opened", driver.getCurrentUrl().contains("cart.html"));
+        List<WebElement> cartItems = driver.findElements(By.className("inventory_item_name"));
+        check("Cart ma 2 items che", cartItems.size() == 2);
+
+        // ---------- 8. Checkout ----------
+        next("8. Checkout ma details bharo");
+        driver.findElement(By.id("checkout")).click();
+        driver.findElement(By.id("first-name")).sendKeys("Dipti");
+        driver.findElement(By.id("last-name")).sendKeys("Bhatt");
+        driver.findElement(By.id("postal-code")).sendKeys("380001");
+
+        next("8b. Continue dabavo");
+        driver.findElement(By.id("continue")).click();
+        check("Order overview page", driver.getCurrentUrl().contains("checkout-step-two"));
+        System.out.println(driver.findElement(By.className("summary_total_label")).getText());
+
+        // ---------- 9. Finish ----------
+        next("9. Order finish karo");
+        driver.findElement(By.id("finish")).click();
+        String msg = driver.findElement(By.className("complete-header")).getText();
+        check("Order placed (Thank you)", msg.contains("Thank you"));
+
+        // ---------- 10. Logout ----------
+        next("10. Logout karo");
+        driver.findElement(By.id("back-to-products")).click();
+        driver.findElement(By.id("react-burger-menu-btn")).click();
+        try { Thread.sleep(1000); } catch (InterruptedException e) { }
+        driver.findElement(By.id("logout_sidebar_link")).click();
+        check("Logout successful", driver.getCurrentUrl().equals(baseUrl));
+
+        System.out.println("\nBadhu purun thayu.");
+    }
+}
+
+
+
+
+/************* Website 5 [ saucedemo.com ]**************/
+import java.util.List;
+import java.util.Map;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+
+public class Website5 {
+
+    // PASS/FAIL print karva no helper
+    static void check(String step, boolean condition) {
+        if (condition) {
+            System.out.println("PASS : " + step);
+        } else {
+            System.out.println("FAIL : " + step);
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+
+        // Browser setup (khulu rahese, password popup nahi aave)
+        ChromeOptions options = new ChromeOptions();
+        options.setExperimentalOption("detach", true);
+        options.setExperimentalOption("prefs", Map.of(
+                "credentials_enable_service", false,
+                "profile.password_manager_enabled", false,
+                "profile.password_manager_leak_detection", false));
+
+        WebDriver driver = new ChromeDriver(options);
+        driver.manage().window().maximize();
+
+        String baseUrl = "https://www.saucedemo.com/";
+
+        // ---------- 1. Website open + title check ----------
+        driver.get(baseUrl);
+        check("Title is Swag Labs", driver.getTitle().equals("Swag Labs"));
+        Thread.sleep(2000);
+
+        // ---------- 2. Login validation: username khali ----------
+        driver.findElement(By.id("password")).sendKeys("secret_sauce");
+        driver.findElement(By.id("login-button")).click();
+        String error = driver.findElement(By.cssSelector("[data-test='error']")).getText();
+        check("Empty username error", error.contains("Username is required"));
+        Thread.sleep(2000);
+
+        // ---------- 3. Login validation: locked user ----------
+        driver.get(baseUrl);
+        driver.findElement(By.id("user-name")).sendKeys("locked_out_user");
+        driver.findElement(By.id("password")).sendKeys("secret_sauce");
+        driver.findElement(By.id("login-button")).click();
+        error = driver.findElement(By.cssSelector("[data-test='error']")).getText();
+        check("Locked user error", error.contains("locked out"));
+        Thread.sleep(2000);
+
+        // ---------- 4. Login validation: wrong password ----------
+        driver.get(baseUrl);
+        driver.findElement(By.id("user-name")).sendKeys("standard_user");
+        driver.findElement(By.id("password")).sendKeys("wrong_password");
+        driver.findElement(By.id("login-button")).click();
+        error = driver.findElement(By.cssSelector("[data-test='error']")).getText();
+        check("Wrong password error", error.contains("do not match"));
+        Thread.sleep(2000);
+
+        // ---------- 5. Sacho login ----------
+        driver.get(baseUrl);
+        driver.findElement(By.id("user-name")).sendKeys("standard_user");
+        driver.findElement(By.id("password")).sendKeys("secret_sauce");
+        driver.findElement(By.id("login-button")).click();
+        check("Login successful", driver.getCurrentUrl().contains("inventory.html"));
+        Thread.sleep(2000);
+
+        // ---------- 6. Products batavo ----------
+        List<WebElement> names = driver.findElements(By.className("inventory_item_name"));
+        List<WebElement> prices = driver.findElements(By.className("inventory_item_price"));
+        System.out.println("Total products: " + names.size());
+        for (int i = 0; i < names.size(); i++) {
+            System.out.println((i + 1) + ". " + names.get(i).getText()
+                    + " - " + prices.get(i).getText());
+        }
+        check("6 products dekhay che", names.size() == 6);
+
+        // ---------- 7. Cart ma 2 product add karo ----------
+        driver.findElement(By.id("add-to-cart-sauce-labs-backpack")).click();
+        driver.findElement(By.id("add-to-cart-sauce-labs-bike-light")).click();
+        String badge = driver.findElement(By.className("shopping_cart_badge")).getText();
+        check("Cart badge = 2", badge.equals("2"));
+        Thread.sleep(2000);
+
+        // ---------- 8. Cart kholo ane verify karo ----------
+        driver.findElement(By.className("shopping_cart_link")).click();
+        check("Cart page opened", driver.getCurrentUrl().contains("cart.html"));
+        List<WebElement> cartItems = driver.findElements(By.className("inventory_item_name"));
+        check("Cart ma 2 items che", cartItems.size() == 2);
+        check("Backpack cart ma che", cartItems.get(0).getText().equals("Sauce Labs Backpack"));
+        Thread.sleep(2000);
+
+        // ---------- 9. Checkout ----------
+        driver.findElement(By.id("checkout")).click();
+        driver.findElement(By.id("first-name")).sendKeys("Dipti");
+        driver.findElement(By.id("last-name")).sendKeys("Bhatt");
+        driver.findElement(By.id("postal-code")).sendKeys("380001");
+        Thread.sleep(2000);
+        driver.findElement(By.id("continue")).click();
+        check("Order overview page", driver.getCurrentUrl().contains("checkout-step-two"));
+        System.out.println(driver.findElement(By.className("summary_total_label")).getText());
+        Thread.sleep(2000);
+
+        // ---------- 10. Order purun karo ----------
+        driver.findElement(By.id("finish")).click();
+        String msg = driver.findElement(By.className("complete-header")).getText();
+        check("Order placed (Thank you)", msg.contains("Thank you"));
+        Thread.sleep(2000);
+
+        // ---------- 11. Home par jao ane logout karo ----------
+        driver.findElement(By.id("back-to-products")).click();
+        driver.findElement(By.id("react-burger-menu-btn")).click();
+        Thread.sleep(1000);
+        driver.findElement(By.id("logout_sidebar_link")).click();
+        check("Logout successful", driver.getCurrentUrl().equals(baseUrl));
+
+        // driver.quit();   // browser khulu rakhva mate band rakhyu che
+    }
+}
+
+
+
+
+
+/************* TheInternetTest **************/
+import java.io.File;
+import java.io.FileWriter;
+import java.time.Duration;
+import java.util.List;
+
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class TheInternetTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String BASE = "https://the-internet.herokuapp.com";
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() throws InterruptedException {
+        Thread.sleep(1500);
+    }
+
+    static void click(By locator) {
+        wait.until(ExpectedConditions.elementToBeClickable(locator)).click();
+    }
+
+    static void type(By locator, String text) {
+        WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        el.clear();
+        el.sendKeys(text);
+    }
+
+    static String text(By locator) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator)).getText();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        driver.manage().window().maximize();
+
+        try {
+            // ---------- 1. Login ----------
+            driver.get(BASE + "/login");
+            check("Login page opened", driver.getCurrentUrl().contains("/login"));
+
+            // wrong password first
+            type(By.id("username"), "tomsmith");
+            type(By.id("password"), "wrong_password");
+            click(By.cssSelector("button.radius"));
+            check("Invalid password message", text(By.id("flash")).contains("Your password is invalid!"));
+            pause();
+
+            // correct login
+            type(By.id("username"), "tomsmith");
+            type(By.id("password"), "SuperSecretPassword!");
+            click(By.cssSelector("button.radius"));
+            check("Login successful", text(By.id("flash")).contains("You logged into a secure area!"));
+            check("Secure area URL", driver.getCurrentUrl().contains("/secure"));
+            pause();
+
+            click(By.cssSelector("a[href='/logout']"));
+            check("Logout successful", text(By.id("flash")).contains("You logged out of the secure area!"));
+            pause();
+
+            // ---------- 2. Checkboxes ----------
+            driver.get(BASE + "/checkboxes");
+            List<WebElement> boxes = driver.findElements(By.cssSelector("#checkboxes input"));
+            check("Checkbox 1 is unchecked at start", !boxes.get(0).isSelected());
+            check("Checkbox 2 is checked at start", boxes.get(1).isSelected());
+            boxes.get(0).click();
+            boxes.get(1).click();
+            check("Checkbox 1 is checked after click", boxes.get(0).isSelected());
+            check("Checkbox 2 is unchecked after click", !boxes.get(1).isSelected());
+            pause();
+
+            // ---------- 3. Dropdown ----------
+            driver.get(BASE + "/dropdown");
+            Select dropdown = new Select(wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("dropdown"))));
+            dropdown.selectByVisibleText("Option 2");
+            check("Dropdown shows Option 2", dropdown.getFirstSelectedOption().getText().equals("Option 2"));
+            pause();
+
+            // ---------- 4. JavaScript alerts ----------
+            driver.get(BASE + "/javascript_alerts");
+
+            click(By.cssSelector("button[onclick='jsAlert()']"));
+            Alert alert = wait.until(ExpectedConditions.alertIsPresent());
+            check("JS Alert text", alert.getText().equals("I am a JS Alert"));
+            alert.accept();
+            check("Alert result", text(By.id("result")).contains("You successfully clicked an alert"));
+            pause();
+
+            click(By.cssSelector("button[onclick='jsConfirm()']"));
+            alert = wait.until(ExpectedConditions.alertIsPresent());
+            alert.accept();
+            check("Confirm OK result", text(By.id("result")).contains("You clicked: Ok"));
+            pause();
+
+            click(By.cssSelector("button[onclick='jsConfirm()']"));
+            alert = wait.until(ExpectedConditions.alertIsPresent());
+            alert.dismiss();
+            check("Confirm Cancel result", text(By.id("result")).contains("You clicked: Cancel"));
+            pause();
+
+            click(By.cssSelector("button[onclick='jsPrompt()']"));
+            alert = wait.until(ExpectedConditions.alertIsPresent());
+            alert.sendKeys("Radhika");
+            alert.accept();
+            check("Prompt result", text(By.id("result")).contains("You entered: Radhika"));
+            pause();
+
+            // ---------- 5. File upload ----------
+            File file = File.createTempFile("upload_test", ".txt");
+            file.deleteOnExit();
+            try (FileWriter fw = new FileWriter(file)) {
+                fw.write("Selenium file upload test");
+            }
+
+            driver.get(BASE + "/upload");
+            driver.findElement(By.id("file-upload")).sendKeys(file.getAbsolutePath());
+            click(By.id("file-submit"));
+            check("File Uploaded heading", text(By.tagName("h3")).equals("File Uploaded!"));
+            check("Uploaded file name shown", text(By.id("uploaded-files")).equals(file.getName()));
+
+            Thread.sleep(3000);
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+
+/************* TheInternetTest **************/
+import java.io.File;
+import java.io.FileWriter;
+import java.time.Duration;
+import java.util.List;
+
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class TheInternetTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String BASE = "https://the-internet.herokuapp.com";
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() throws InterruptedException {
+        Thread.sleep(1500);
+    }
+
+    static void click(By locator) {
+        wait.until(ExpectedConditions.elementToBeClickable(locator)).click();
+    }
+
+    static void type(By locator, String text) {
+        WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        el.clear();
+        el.sendKeys(text);
+    }
+
+    static String text(By locator) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator)).getText();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        driver.manage().window().maximize();
+
+        try {
+            // ---------- 1. Login ----------
+            driver.get(BASE + "/login");
+            check("Login page opened", driver.getCurrentUrl().contains("/login"));
+
+            // wrong password first
+            type(By.id("username"), "tomsmith");
+            type(By.id("password"), "wrong_password");
+            click(By.cssSelector("button.radius"));
+            check("Invalid password message", text(By.id("flash")).contains("Your password is invalid!"));
+            pause();
+
+            // correct login
+            type(By.id("username"), "tomsmith");
+            type(By.id("password"), "SuperSecretPassword!");
+            click(By.cssSelector("button.radius"));
+            check("Login successful", text(By.id("flash")).contains("You logged into a secure area!"));
+            check("Secure area URL", driver.getCurrentUrl().contains("/secure"));
+            pause();
+
+            click(By.cssSelector("a[href='/logout']"));
+            check("Logout successful", text(By.id("flash")).contains("You logged out of the secure area!"));
+            pause();
+
+            // ---------- 2. Checkboxes ----------
+            driver.get(BASE + "/checkboxes");
+            List<WebElement> boxes = driver.findElements(By.cssSelector("#checkboxes input"));
+            check("Checkbox 1 is unchecked at start", !boxes.get(0).isSelected());
+            check("Checkbox 2 is checked at start", boxes.get(1).isSelected());
+            boxes.get(0).click();
+            boxes.get(1).click();
+            check("Checkbox 1 is checked after click", boxes.get(0).isSelected());
+            check("Checkbox 2 is unchecked after click", !boxes.get(1).isSelected());
+            pause();
+
+            // ---------- 3. Dropdown ----------
+            driver.get(BASE + "/dropdown");
+            Select dropdown = new Select(wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("dropdown"))));
+            dropdown.selectByVisibleText("Option 2");
+            check("Dropdown shows Option 2", dropdown.getFirstSelectedOption().getText().equals("Option 2"));
+            pause();
+
+            // ---------- 4. JavaScript alerts ----------
+            driver.get(BASE + "/javascript_alerts");
+
+            click(By.cssSelector("button[onclick='jsAlert()']"));
+            Alert alert = wait.until(ExpectedConditions.alertIsPresent());
+            check("JS Alert text", alert.getText().equals("I am a JS Alert"));
+            alert.accept();
+            check("Alert result", text(By.id("result")).contains("You successfully clicked an alert"));
+            pause();
+
+            click(By.cssSelector("button[onclick='jsConfirm()']"));
+            alert = wait.until(ExpectedConditions.alertIsPresent());
+            alert.accept();
+            check("Confirm OK result", text(By.id("result")).contains("You clicked: Ok"));
+            pause();
+
+            click(By.cssSelector("button[onclick='jsConfirm()']"));
+            alert = wait.until(ExpectedConditions.alertIsPresent());
+            alert.dismiss();
+            check("Confirm Cancel result", text(By.id("result")).contains("You clicked: Cancel"));
+            pause();
+
+            click(By.cssSelector("button[onclick='jsPrompt()']"));
+            alert = wait.until(ExpectedConditions.alertIsPresent());
+            alert.sendKeys("Radhika");
+            alert.accept();
+            check("Prompt result", text(By.id("result")).contains("You entered: Radhika"));
+            pause();
+
+            // ---------- 5. File upload ----------
+            File file = File.createTempFile("upload_test", ".txt");
+            file.deleteOnExit();
+            try (FileWriter fw = new FileWriter(file)) {
+                fw.write("Selenium file upload test");
+            }
+
+            driver.get(BASE + "/upload");
+            driver.findElement(By.id("file-upload")).sendKeys(file.getAbsolutePath());
+            click(By.id("file-submit"));
+            check("File Uploaded heading", text(By.tagName("h3")).equals("File Uploaded!"));
+            check("Uploaded file name shown", text(By.id("uploaded-files")).equals(file.getName()));
+
+            Thread.sleep(3000);
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+
+/************* SeleniumWebFormTest **************/
+import java.io.File;
+import java.io.FileWriter;
+import java.time.Duration;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class SeleniumWebFormTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String URL = "https://www.selenium.dev/selenium/web/web-form.html";
+
+    // ===== CHANGE THE SPEED HERE (milliseconds, 1000 = 1 second) =====
+    static final int ACTION_DELAY = 1500;
+    static final int STEP_DELAY = 3000;
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() throws InterruptedException {
+        Thread.sleep(STEP_DELAY);
+    }
+
+    static void slow() {
+        try {
+            Thread.sleep(ACTION_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    static void click(By locator) {
+        WebElement el = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        wait.until(ExpectedConditions.elementToBeClickable(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+        slow();
+    }
+
+    static void type(By locator, String text) {
+        WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        el.clear();
+        el.sendKeys(text);
+        slow();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        driver.manage().window().maximize();
+
+        try {
+            // 1. Open the form
+            driver.get(URL);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("my-text-id")));
+            check("Web form title is Web form", driver.getTitle().equals("Web form"));
+            pause();
+
+            // 2. Text fields
+            type(By.id("my-text-id"), "Radhika");
+            type(By.name("my-password"), "Radhika@123");
+            type(By.name("my-textarea"), "Selenium form testing");
+
+            // 3. Dropdown (select)
+            Select select = new Select(driver.findElement(By.name("my-select")));
+            select.selectByVisibleText("Two");
+            slow();
+            check("Dropdown shows Two", select.getFirstSelectedOption().getText().equals("Two"));
+
+            // 4. Dropdown (datalist)
+            type(By.name("my-datalist"), "New York");
+
+            // 5. File upload
+            File file = File.createTempFile("form_upload", ".txt");
+            file.deleteOnExit();
+            try (FileWriter fw = new FileWriter(file)) {
+                fw.write("Selenium upload");
+            }
+            driver.findElement(By.name("my-file")).sendKeys(file.getAbsolutePath());
+            slow();
+            pause();
+
+            // 6. Checkbox and radio button
+            click(By.id("my-check-2"));
+            check("Checkbox 2 is checked", driver.findElement(By.id("my-check-2")).isSelected());
+            click(By.id("my-radio-2"));
+            check("Radio 2 is selected", driver.findElement(By.id("my-radio-2")).isSelected());
+            check("Radio 1 is no longer selected", !driver.findElement(By.id("my-radio-1")).isSelected());
+
+            // 7. Color and date (set with JavaScript, works in every browser language)
+            WebElement color = driver.findElement(By.name("my-colors"));
+            ((JavascriptExecutor) driver).executeScript(
+                    "arguments[0].value = '#ff0000';"
+                    + "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));"
+                    + "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", color);
+            WebElement date = driver.findElement(By.name("my-date"));
+            ((JavascriptExecutor) driver).executeScript(
+                    "arguments[0].value = '2026-10-25';"
+                    + "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));"
+                    + "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", date);
+            slow();
+            pause();
+
+            // 8. Submit
+            click(By.cssSelector("button[type='submit']"));
+            wait.until(ExpectedConditions.urlContains("submitted"));
+            check("Form submitted page opened", driver.getCurrentUrl().contains("form-submitted"));
+            check("Heading is Form submitted",
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("h1"))).getText()
+                            .equals("Form submitted"));
+            check("Message is Received!",
+                    driver.findElement(By.id("message")).getText().equals("Received!"));
+            check("Typed text was sent in the URL", driver.getCurrentUrl().contains("my-text=Radhika"));
+
+            Thread.sleep(5000);
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+/************* Saucedemotest **************/
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+
+public class Saucedemotest {
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    // short pause only so the examiner can watch each step
+    static void pause() throws InterruptedException {
+        Thread.sleep(1500);
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.setExperimentalOption("prefs", Map.of(
+                "credentials_enable_service", false,
+                "profile.password_manager_enabled", false,
+                "profile.password_manager_leak_detection", false));
+
+        WebDriver driver = new ChromeDriver(options);
+        driver.manage().window().maximize();
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+
+        String baseUrl = "https://www.saucedemo.com/";
+
+        try {
+            // 1. Open website + title
+            driver.get(baseUrl);
+            check("Title is Swag Labs", driver.getTitle().equals("Swag Labs"));
+            pause();
+
+            // 2. Empty username
+            driver.findElement(By.id("password")).sendKeys("secret_sauce");
+            driver.findElement(By.id("login-button")).click();
+            String error = driver.findElement(By.cssSelector("[data-test='error']")).getText();
+            check("Empty username error", error.contains("Username is required"));
+            pause();
+
+            // 3. Locked out user
+            driver.get(baseUrl);
+            driver.findElement(By.id("user-name")).sendKeys("locked_out_user");
+            driver.findElement(By.id("password")).sendKeys("secret_sauce");
+            driver.findElement(By.id("login-button")).click();
+            error = driver.findElement(By.cssSelector("[data-test='error']")).getText();
+            check("Locked user error", error.contains("locked out"));
+            pause();
+
+            // 4. Wrong password
+            driver.get(baseUrl);
+            driver.findElement(By.id("user-name")).sendKeys("standard_user");
+            driver.findElement(By.id("password")).sendKeys("wrong_password");
+            driver.findElement(By.id("login-button")).click();
+            error = driver.findElement(By.cssSelector("[data-test='error']")).getText();
+            check("Wrong password error", error.contains("do not match"));
+            pause();
+
+            // 5. Valid login
+            driver.get(baseUrl);
+            driver.findElement(By.id("user-name")).sendKeys("standard_user");
+            driver.findElement(By.id("password")).sendKeys("secret_sauce");
+            driver.findElement(By.id("login-button")).click();
+            check("Login successful", driver.getCurrentUrl().contains("inventory.html"));
+            pause();
+
+            // 6. Products list
+            List<WebElement> names = driver.findElements(By.className("inventory_item_name"));
+            List<WebElement> prices = driver.findElements(By.className("inventory_item_price"));
+            System.out.println("Total products: " + names.size());
+            for (int i = 0; i < names.size(); i++) {
+                System.out.println((i + 1) + ". " + names.get(i).getText() + " - " + prices.get(i).getText());
+            }
+            check("6 products are displayed", names.size() == 6);
+
+            // 7. Add 2 products to cart
+            driver.findElement(By.id("add-to-cart-sauce-labs-backpack")).click();
+            driver.findElement(By.id("add-to-cart-sauce-labs-bike-light")).click();
+            String badge = driver.findElement(By.className("shopping_cart_badge")).getText();
+            check("Cart badge = 2", badge.equals("2"));
+            pause();
+
+            // 8. Open cart and verify
+            driver.findElement(By.className("shopping_cart_link")).click();
+            check("Cart page opened", driver.getCurrentUrl().contains("cart.html"));
+            List<WebElement> cartItems = driver.findElements(By.className("inventory_item_name"));
+            check("2 items in cart", cartItems.size() == 2);
+            check("Backpack is in cart", cartItems.get(0).getText().equals("Sauce Labs Backpack"));
+            pause();
+
+            // 9. Checkout
+            driver.findElement(By.id("checkout")).click();
+            driver.findElement(By.id("first-name")).sendKeys("Radhika");
+            driver.findElement(By.id("last-name")).sendKeys("Amipara");
+            driver.findElement(By.id("postal-code")).sendKeys("380001");
+            pause();
+            driver.findElement(By.id("continue")).click();
+            check("Order overview page", driver.getCurrentUrl().contains("checkout-step-two"));
+            System.out.println(driver.findElement(By.className("summary_total_label")).getText());
+            pause();
+
+            // 10. Finish order
+            driver.findElement(By.id("finish")).click();
+            String msg = driver.findElement(By.className("complete-header")).getText();
+            check("Order placed (Thank you)", msg.contains("Thank you"));
+            pause();
+
+            // 11. Logout
+            driver.findElement(By.id("back-to-products")).click();
+            driver.findElement(By.id("react-burger-menu-btn")).click();
+            pause();
+            driver.findElement(By.id("logout_sidebar_link")).click();
+            check("Logout successful", driver.getCurrentUrl().equals(baseUrl));
+
+            Thread.sleep(3000);
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+
+/************* RahulShettyPracticeTest **************/
+import java.time.Duration;
+import java.util.List;
+
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class RahulShettyPracticeTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String URL = "https://rahulshettyacademy.com/AutomationPractice/";
+
+    // ===== CHANGE THE SPEED HERE (milliseconds, 1000 = 1 second) =====
+    static final int ACTION_DELAY = 1500;
+    static final int STEP_DELAY = 3000;
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() throws InterruptedException {
+        Thread.sleep(STEP_DELAY);
+    }
+
+    static void slow() {
+        try {
+            Thread.sleep(ACTION_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    static WebElement scrollTo(By locator) {
+        WebElement el = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        return el;
+    }
+
+    static void click(By locator) {
+        WebElement el = scrollTo(locator);
+        wait.until(ExpectedConditions.elementToBeClickable(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+        slow();
+    }
+
+    static void type(By locator, String text) {
+        WebElement el = scrollTo(locator);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        el.clear();
+        el.sendKeys(text);
+        slow();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        driver.manage().window().maximize();
+
+        try {
+            // 1. Open page
+            driver.get(URL);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("autocomplete")));
+            check("Practice page opened", driver.getCurrentUrl().contains("AutomationPractice"));
+            pause();
+
+            // 2. Radio button
+            click(By.cssSelector("input[value='radio2']"));
+            check("Radio 2 is selected", driver.findElement(By.cssSelector("input[value='radio2']")).isSelected());
+            pause();
+
+            // 3. Auto suggestive field
+            type(By.id("autocomplete"), "Ind");
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("li.ui-menu-item div")));
+            List<WebElement> suggestions = driver.findElements(By.cssSelector("li.ui-menu-item div"));
+            check("Suggestions are shown (" + suggestions.size() + ")", suggestions.size() > 0);
+            for (WebElement s : suggestions) {
+                if (s.getText().equals("India")) {
+                    s.click();
+                    break;
+                }
+            }
+            slow();
+            check("India selected in the field",
+                    driver.findElement(By.id("autocomplete")).getAttribute("value").equals("India"));
+            pause();
+
+            // 4. Dropdown
+            WebElement dropdownEl = scrollTo(By.id("dropdown-class-example"));
+            Select dropdown = new Select(dropdownEl);
+            dropdown.selectByVisibleText("Option2");
+            slow();
+            check("Dropdown shows Option2", dropdown.getFirstSelectedOption().getText().equals("Option2"));
+            pause();
+
+            // 5. Checkbox
+            click(By.id("checkBoxOption1"));
+            check("Checkbox Option1 is checked", driver.findElement(By.id("checkBoxOption1")).isSelected());
+            pause();
+
+            // 6. Alert
+            type(By.id("name"), "Radhika");
+            click(By.id("alertbtn"));
+            Alert alert = wait.until(ExpectedConditions.alertIsPresent());
+            check("Alert contains the typed name", alert.getText().contains("Radhika"));
+            alert.accept();
+            pause();
+
+            // 7. Confirm
+            type(By.id("name"), "Radhika");
+            click(By.id("confirmbtn"));
+            alert = wait.until(ExpectedConditions.alertIsPresent());
+            check("Confirm popup shown", alert.getText().contains("Are you sure"));
+            alert.accept();
+            pause();
+
+            // 8. Hide / Show textbox
+            click(By.id("hide-textbox"));
+            check("Textbox is hidden", !driver.findElement(By.id("displayed-text")).isDisplayed());
+            click(By.id("show-textbox"));
+            check("Textbox is shown again", driver.findElement(By.id("displayed-text")).isDisplayed());
+            pause();
+
+            // 9. Mouse hover
+            WebElement hover = scrollTo(By.id("mousehover"));
+            new Actions(driver).moveToElement(hover).perform();
+            slow();
+            check("Hover menu shows Top link",
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.linkText("Top"))).isDisplayed());
+
+            Thread.sleep(5000);
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+/************* PracticeTestAutomation **************/
+import java.time.Duration;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class PracticeTestAutomationTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String URL = "https://practicetestautomation.com/practice-test-login/";
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() throws InterruptedException {
+        Thread.sleep(1500);
+    }
+
+    static void login(String user, String pass) {
+        WebElement u = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")));
+        u.clear();
+        u.sendKeys(user);
+        WebElement p = driver.findElement(By.id("password"));
+        p.clear();
+        p.sendKeys(pass);
+        WebElement submit = driver.findElement(By.id("submit"));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", submit);
+        wait.until(ExpectedConditions.elementToBeClickable(submit)).click();
+    }
+
+    static String text(By locator) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator)).getText();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        driver.manage().window().maximize();
+
+        try {
+            // 1. Negative test: wrong username
+            driver.get(URL);
+            check("Login page title contains Test Login", driver.getTitle().contains("Test Login"));
+            login("incorrectUser", "Password123");
+            check("Invalid username message", text(By.id("error")).equals("Your username is invalid!"));
+            pause();
+
+            // 2. Negative test: wrong password
+            driver.get(URL);
+            login("student", "incorrectPassword");
+            check("Invalid password message", text(By.id("error")).equals("Your password is invalid!"));
+            pause();
+
+            // 3. Positive test
+            driver.get(URL);
+            login("student", "Password123");
+            wait.until(ExpectedConditions.urlContains("logged-in-successfully"));
+            check("URL contains logged-in-successfully", driver.getCurrentUrl().contains("logged-in-successfully"));
+            check("Success text shown", text(By.tagName("h1")).contains("Logged In Successfully"));
+            check("Log out button displayed", driver.findElement(By.linkText("Log out")).isDisplayed());
+            pause();
+
+            // 4. Logout
+            driver.findElement(By.linkText("Log out")).click();
+            wait.until(ExpectedConditions.urlContains("practice-test-login"));
+            check("Logout successful (back on login page)", driver.getCurrentUrl().contains("practice-test-login"));
+
+            Thread.sleep(3000);
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+/************* PracticeSoftwareTestingTest **************/
+import java.time.Duration;
+import java.util.List;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class PracticeSoftwareTestingTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String BASE = "https://practicesoftwaretesting.com/";
+
+    // ===== CHANGE THE SPEED HERE (milliseconds, 1000 = 1 second) =====
+    static final int ACTION_DELAY = 2000;   // pause after every click / typing
+    static final int STEP_DELAY = 3000;     // pause after every test step
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    // pause between test steps
+    static void pause() throws InterruptedException {
+        Thread.sleep(STEP_DELAY);
+    }
+
+    // small pause after every single action so the examiner can watch
+    static void slow() {
+        try {
+            Thread.sleep(ACTION_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    static By dt(String value) {
+        return By.cssSelector("[data-test='" + value + "']");
+    }
+
+    static void click(By locator) {
+        WebElement el = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        wait.until(ExpectedConditions.elementToBeClickable(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+        slow();
+    }
+
+    static void type(By locator, String text) {
+        WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        el.clear();
+        el.sendKeys(text);
+        slow();
+    }
+
+    static String text(By locator) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator)).getText();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        driver.manage().window().maximize();
+
+        try {
+            // 1. Open home page
+            driver.get(BASE);
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("a.card")));
+            check("Home page title contains Practice Software Testing",
+                    driver.getTitle().contains("Practice Software Testing"));
+            List<WebElement> cards = driver.findElements(By.cssSelector("a.card"));
+            check("Products are displayed (" + cards.size() + ")", cards.size() > 0);
+            pause();
+
+            // 2. Search a product
+            type(dt("search-query"), "Pliers");
+            click(dt("search-submit"));
+            wait.until(ExpectedConditions.textToBePresentInElementLocated(dt("product-name"), "Pliers"));
+            check("Search result shows Pliers", text(dt("product-name")).contains("Pliers"));
+            pause();
+
+            // 3. Open first product
+            String productName = text(dt("product-name"));
+            click(By.cssSelector("a.card"));
+            wait.until(ExpectedConditions.urlContains("/product/"));
+            check("Product details page opened", driver.getCurrentUrl().contains("/product/"));
+            pause();
+
+            // 4. Add to cart
+            click(dt("add-to-cart"));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[role='alert']")));
+            check("Product added message shown",
+                    driver.findElement(By.cssSelector("[role='alert']")).getText().contains("added"));
+            pause();
+
+            // 5. Open cart and verify
+            click(dt("nav-cart"));
+            wait.until(ExpectedConditions.urlContains("/checkout"));
+            check("Cart page opened", driver.getCurrentUrl().contains("/checkout"));
+            check("Product is in the cart", text(dt("product-title")).contains("Pliers"));
+            pause();
+
+            // 6. Login with the public demo customer
+            driver.get(BASE + "auth/login");
+            type(dt("email"), "customer@practicesoftwaretesting.com");
+            type(dt("password"), "welcome01");
+            click(dt("login-submit"));
+            wait.until(ExpectedConditions.urlContains("/account"));
+            check("Login successful (account page)", driver.getCurrentUrl().contains("/account"));
+            check("User name shown in menu", text(dt("nav-menu")).contains("Jane Doe"));
+            pause();
+
+            // 7. Sign out
+            click(dt("nav-menu"));
+            click(dt("nav-sign-out"));
+            wait.until(ExpectedConditions.urlContains("/auth/login"));
+            check("Sign out successful", driver.getCurrentUrl().contains("/auth/login"));
+
+            Thread.sleep(5000);   // keep the final page visible
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+/************* ParaBankTest **************/
+import java.time.Duration;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class ParaBankTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String BASE = "https://parabank.parasoft.com/parabank/";
+
+    // ===== CHANGE THE SPEED HERE (milliseconds, 1000 = 1 second) =====
+    static final int ACTION_DELAY = 1500;
+    static final int STEP_DELAY = 3000;
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() throws InterruptedException {
+        Thread.sleep(STEP_DELAY);
+    }
+
+    static void slow() {
+        try {
+            Thread.sleep(ACTION_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    static void click(By locator) {
+        WebElement el = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        wait.until(ExpectedConditions.elementToBeClickable(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+        slow();
+    }
+
+    static void type(By locator, String text) {
+        WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        el.clear();
+        el.sendKeys(text);
+        slow();
+    }
+
+    static boolean bodyHas(String text) {
+        try {
+            wait.until(ExpectedConditions.textToBePresentInElementLocated(By.tagName("body"), text));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        driver.manage().window().maximize();
+
+        String user = "radhika" + System.currentTimeMillis();
+        String pass = "Radhika@123";
+
+        try {
+            // 1. Open register page
+            driver.get(BASE + "register.htm");
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("customer.firstName")));
+            check("Register page opened", driver.getTitle().contains("Register"));
+            pause();
+
+            // 2. Fill registration form
+            type(By.id("customer.firstName"), "Radhika");
+            type(By.id("customer.lastName"), "Amipara");
+            type(By.id("customer.address.street"), "Vaishnodevi");
+            type(By.id("customer.address.city"), "Ahmedabad");
+            type(By.id("customer.address.state"), "Gujarat");
+            type(By.id("customer.address.zipCode"), "380001");
+            type(By.id("customer.phoneNumber"), "9876543210");
+            type(By.id("customer.ssn"), "123456789");
+            type(By.id("customer.username"), user);
+            type(By.id("customer.password"), pass);
+            type(By.id("repeatedPassword"), pass);
+            click(By.cssSelector("input[value='Register']"));
+
+            check("Welcome message shown", bodyHas("Welcome " + user));
+            check("Account created message", bodyHas("Your account was created successfully"));
+            pause();
+
+            // 3. Logout
+            click(By.linkText("Log Out"));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("username")));
+            check("Logout successful (login form visible)", driver.findElement(By.name("username")).isDisplayed());
+            pause();
+
+            // 4. Invalid login
+            type(By.name("username"), user);
+            type(By.name("password"), "wrongPassword");
+            click(By.cssSelector("input[value='Log In']"));
+            check("Invalid login error shown", bodyHas("could not be verified"));
+            pause();
+
+            // 5. Valid login
+            driver.get(BASE + "index.htm");
+            type(By.name("username"), user);
+            type(By.name("password"), pass);
+            click(By.cssSelector("input[value='Log In']"));
+            check("Accounts Overview page shown", bodyHas("Accounts Overview"));
+            pause();
+
+            // 6. Transfer funds
+            click(By.linkText("Transfer Funds"));
+            wait.until(d -> new Select(d.findElement(By.id("fromAccountId"))).getOptions().size() > 0);
+            type(By.id("amount"), "100");
+            new Select(driver.findElement(By.id("fromAccountId"))).selectByIndex(0);
+            new Select(driver.findElement(By.id("toAccountId"))).selectByIndex(0);
+            slow();
+            click(By.cssSelector("input[value='Transfer']"));
+            check("Transfer complete", bodyHas("Transfer Complete!"));
+            pause();
+
+            // 7. Logout
+            click(By.linkText("Log Out"));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("username")));
+            check("Final logout successful", driver.findElement(By.name("username")).isDisplayed());
+
+            Thread.sleep(5000);
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+
+/************* OrangeHRMTest **************/
+import java.time.Duration;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class OrangeHRMTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String URL = "https://opensource-demo.orangehrmlive.com/";
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() throws InterruptedException {
+        Thread.sleep(1500);
+    }
+
+    static void login(String user, String pass) {
+        WebElement u = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("username")));
+        u.clear();
+        u.sendKeys(user);
+        WebElement p = driver.findElement(By.name("password"));
+        p.clear();
+        p.sendKeys(pass);
+        driver.findElement(By.cssSelector("button[type='submit']")).click();
+    }
+
+    static String text(By locator) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator)).getText();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        driver.manage().window().maximize();
+
+        try {
+            // 1. Open login page
+            driver.get(URL);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("username")));
+            check("Login page opened", driver.getCurrentUrl().contains("auth/login"));
+            pause();
+
+            // 2. Negative test: invalid credentials
+            login("Admin", "wrongPassword");
+            check("Invalid credentials message",
+                    text(By.cssSelector(".oxd-alert-content-text")).equals("Invalid credentials"));
+            pause();
+
+            // 3. Valid login
+            driver.get(URL);
+            login("Admin", "admin123");
+            wait.until(ExpectedConditions.urlContains("dashboard"));
+            check("Dashboard URL opened", driver.getCurrentUrl().contains("dashboard"));
+            check("Dashboard heading shown", text(By.cssSelector("h6.oxd-topbar-header-breadcrumb-module")).equals("Dashboard"));
+            pause();
+
+            // 4. Open PIM module
+            wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//span[text()='PIM']"))).click();
+            wait.until(ExpectedConditions.urlContains("viewPimModule"));
+            check("PIM page opened", text(By.cssSelector("h6.oxd-topbar-header-breadcrumb-module")).equals("PIM"));
+            pause();
+
+            // 5. Open Admin module
+            wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//span[text()='Admin']"))).click();
+            wait.until(ExpectedConditions.urlContains("viewAdminModule"));
+            check("Admin page opened", text(By.cssSelector("h6.oxd-topbar-header-breadcrumb-module")).equals("Admin"));
+            pause();
+
+            // 6. Logout
+            wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(".oxd-userdropdown-tab"))).click();
+            wait.until(ExpectedConditions.elementToBeClickable(By.linkText("Logout"))).click();
+            wait.until(ExpectedConditions.urlContains("auth/login"));
+            check("Logout successful", driver.getCurrentUrl().contains("auth/login"));
+
+            Thread.sleep(3000);
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+/************* OpenCartTest **************/
+import java.time.Duration;
+import java.util.List;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class OpenCartTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String BASE = "https://demo.opencart.com/";
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() throws InterruptedException {
+        Thread.sleep(1500);
+    }
+
+    // Opens a URL and waits while the site shows its "security verification" page.
+    // If a checkbox appears, tick it by hand in the browser; the test continues automatically.
+    static void open(String url) throws InterruptedException {
+        driver.get(url);
+        for (int i = 0; i < 60; i++) {
+            String title = driver.getTitle();
+            boolean blocked = title != null && title.contains("Just a moment");
+            if (!blocked) {
+                return;
+            }
+            if (i == 0) {
+                System.out.println("INFO : Security verification page shown. Waiting up to 60 seconds "
+                        + "(tick the checkbox manually if it appears)...");
+            }
+            Thread.sleep(1000);
+        }
+        System.out.println("FAIL : Site is still blocking the browser (bot protection)");
+    }
+
+    static void click(By locator) {
+        WebElement el = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        wait.until(ExpectedConditions.elementToBeClickable(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+    }
+
+    static void type(By locator, String text) {
+        WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        el.clear();
+        el.sendKeys(text);
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+        options.addArguments("--disable-blink-features=AutomationControlled");
+        options.setExperimentalOption("excludeSwitches", List.of("enable-automation"));
+
+        // Saved profile: keeps the "I am human" cookie after you pass the check once.
+        // Close all other Chrome windows before running.
+        options.addArguments("--user-data-dir=C:/selenium-profile");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        driver.manage().window().maximize();
+
+        String email = "radhika" + System.currentTimeMillis() + "@gmail.com";
+
+        try {
+            // 1. Open store
+            open(BASE);
+            check("Home page title is Your Store", "Your Store".equals(driver.getTitle()));
+            pause();
+
+            // 2. Register page
+            open(BASE + "index.php?route=account/register&language=en-gb");
+            check("Register page opened", driver.getCurrentUrl().contains("account/register"));
+
+            type(By.id("input-firstname"), "Radhika");
+            type(By.id("input-lastname"), "Amipara");
+            type(By.id("input-email"), email);
+            type(By.id("input-password"), "Radhika@123");
+            click(By.name("agree"));
+            pause();
+            click(By.cssSelector("button[type='submit']"));
+
+            // 3. Account created
+            WebElement heading = wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("h1")));
+            check("Account created", heading.getText().contains("Account Has Been Created"));
+            pause();
+
+            // 4. Search for a product
+            type(By.name("search"), "iPhone");
+            click(By.cssSelector("#search button"));
+            wait.until(ExpectedConditions.urlContains("product/search"));
+            check("Search result shows iPhone", driver.getPageSource().contains("iPhone"));
+            pause();
+
+            // 5. Open product page
+            click(By.linkText("iPhone"));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("button-cart")));
+            check("Product page opened", driver.findElement(By.tagName("h1")).getText().equals("iPhone"));
+
+            // 6. Add to cart
+            click(By.id("button-cart"));
+            String alert = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                    By.cssSelector(".alert-success"))).getText();
+            check("Success message shown", alert.contains("added") && alert.contains("iPhone"));
+            pause();
+
+            // 7. Open cart and verify
+            open(BASE + "index.php?route=checkout/cart&language=en-gb");
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("h1")));
+            check("Shopping cart page opened", driver.getCurrentUrl().contains("checkout/cart"));
+            check("iPhone is in the cart", driver.getPageSource().contains("iPhone"));
+            pause();
+
+            // 8. Checkout page opens
+            click(By.linkText("Checkout"));
+            wait.until(ExpectedConditions.urlContains("checkout"));
+            check("Checkout page opened", driver.getCurrentUrl().contains("checkout"));
+            pause();
+
+            // 9. Logout
+            click(By.cssSelector("a[title='My Account']"));
+            click(By.linkText("Logout"));
+            WebElement logoutHeading = wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("h1")));
+            check("Logout successful", logoutHeading.getText().contains("Account Logout"));
+
+            Thread.sleep(3000);
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+
+/************* MagentoLumaTest **************/
+import java.time.Duration;
+import java.util.List;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class MagentoLumaTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String BASE = "https://magento.softwaretestingboard.com/";
+
+    // ===== CHANGE THE SPEED HERE (milliseconds, 1000 = 1 second) =====
+    static final int ACTION_DELAY = 1500;   // pause after every click / typing
+    static final int STEP_DELAY = 3000;     // pause after every test step
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    // pause between test steps
+    static void pause() throws InterruptedException {
+        Thread.sleep(STEP_DELAY);
+    }
+
+    // small pause after every single action so the examiner can watch
+    static void slow() {
+        try {
+            Thread.sleep(ACTION_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    static void jsClick(WebElement el) {
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+        slow();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(40));
+        driver.manage().window().maximize();
+
+        try {
+            // 1. Open store
+            driver.get(BASE);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("search")));
+            check("Home page title contains Home Page", driver.getTitle().contains("Home Page"));
+            pause();
+
+            // 2. Search a product
+            WebElement search = driver.findElement(By.id("search"));
+            search.sendKeys("jacket");
+            slow();
+            search.sendKeys(Keys.ENTER);
+            wait.until(ExpectedConditions.urlContains("catalogsearch/result"));
+            check("Search result page opened", driver.getCurrentUrl().contains("catalogsearch/result"));
+            List<WebElement> results = wait.until(
+                    ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("a.product-item-link")));
+            check("Products found (" + results.size() + ")", results.size() > 0);
+            pause();
+
+            // 3. Open first product
+            String productName = results.get(0).getText();
+            jsClick(results.get(0));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("product-addtocart-button")));
+            check("Product page opened: " + productName,
+                    driver.findElement(By.cssSelector("span[data-ui-id='page-title-wrapper']")).getText()
+                            .contains(productName));
+            pause();
+
+            // 4. Select size and color (first option of each swatch), then add to cart
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".swatch-option")));
+            List<WebElement> attributes = driver.findElements(By.cssSelector(".swatch-attribute"));
+            for (WebElement attr : attributes) {
+                List<WebElement> opts = attr.findElements(By.cssSelector(".swatch-option"));
+                if (!opts.isEmpty()) {
+                    jsClick(opts.get(0));
+                    Thread.sleep(500);
+                }
+            }
+            check("Size and color selected",
+                    driver.findElements(By.cssSelector(".swatch-option.selected")).size() >= 1);
+            pause();
+
+            jsClick(driver.findElement(By.id("product-addtocart-button")));
+
+            String msg = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                    By.cssSelector("div.message-success"))).getText();
+            check("Added to cart message shown", msg.contains("You added"));
+            pause();
+
+            // 5. Open cart and verify
+            driver.get(BASE + "checkout/cart/");
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("td.col.item")));
+            check("Cart page opened", driver.getCurrentUrl().contains("checkout/cart"));
+            String cartItem = driver.findElement(By.cssSelector("td.col.item .product-item-name")).getText();
+            check("Product is in the cart", cartItem.equals(productName));
+            pause();
+
+            // 6. Sign in page
+            driver.get(BASE + "customer/account/login/");
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("email")));
+            check("Sign in page opened", driver.getCurrentUrl().contains("customer/account/login"));
+
+            Thread.sleep(5000);   // keep the final page visible
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+
+/************* Guru99BankTest **************/
+import java.time.Duration;
+
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class Guru99BankTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String URL = "https://demo.guru99.com/V4/";
+
+    // ===== The valid User ID and Password are created for you at https://demo.guru99.com/ =====
+    // Enter your email there, copy the generated ID and password here. They expire after a few days.
+    static final String USER_ID = "YOUR_USER_ID";
+    static final String PASSWORD = "YOUR_PASSWORD";
+
+    // ===== CHANGE THE SPEED HERE (milliseconds, 1000 = 1 second) =====
+    static final int ACTION_DELAY = 1500;
+    static final int STEP_DELAY = 3000;
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() throws InterruptedException {
+        Thread.sleep(STEP_DELAY);
+    }
+
+    static void slow() {
+        try {
+            Thread.sleep(ACTION_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    static void click(By locator) {
+        WebElement el = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        wait.until(ExpectedConditions.elementToBeClickable(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+        slow();
+    }
+
+    static void type(By locator, String text) {
+        WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        el.clear();
+        el.sendKeys(text);
+        slow();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        driver.manage().window().maximize();
+
+        try {
+            // 1. Open login page
+            driver.get(URL);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("uid")));
+            check("Login page opened", driver.getTitle().contains("Guru99 Bank"));
+            pause();
+
+            // 2. Invalid login -> alert
+            type(By.name("uid"), "mngr000000");
+            type(By.name("password"), "wrongPass");
+            click(By.name("btnLogin"));
+            Alert alert = wait.until(ExpectedConditions.alertIsPresent());
+            check("Invalid login alert shown", alert.getText().contains("not valid"));
+            alert.accept();
+            pause();
+
+            // 3. Reset button clears the fields
+            type(By.name("uid"), "abc");
+            type(By.name("password"), "xyz");
+            click(By.name("btnReset"));
+            check("Reset clears User ID", driver.findElement(By.name("uid")).getAttribute("value").isEmpty());
+            check("Reset clears Password", driver.findElement(By.name("password")).getAttribute("value").isEmpty());
+            pause();
+
+            // 4. Valid login (only if you filled USER_ID and PASSWORD above)
+            if (USER_ID.startsWith("YOUR_")) {
+                System.out.println("INFO : Valid login skipped. Fill USER_ID and PASSWORD at the top of the file.");
+            } else {
+                type(By.name("uid"), USER_ID);
+                type(By.name("password"), PASSWORD);
+                click(By.name("btnLogin"));
+                wait.until(ExpectedConditions.titleContains("Manager"));
+                check("Login successful (Manager HomePage)", driver.getTitle().contains("Manager"));
+                pause();
+
+                click(By.linkText("Log out"));
+                alert = wait.until(ExpectedConditions.alertIsPresent());
+                check("Logout alert shown", alert.getText().contains("Logged Out"));
+                alert.accept();
+            }
+
+            Thread.sleep(5000);
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+
+/************* DemoQATest **************/
+import java.time.Duration;
+import java.util.ArrayList;
+
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class DemoQATest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String BASE = "https://demoqa.com";
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() throws InterruptedException {
+        Thread.sleep(1500);
+    }
+
+    // demoqa shows ads and a footer that can cover buttons; remove them
+    static void removeAds() {
+        ((JavascriptExecutor) driver).executeScript(
+                "document.querySelectorAll('#fixedban, footer, iframe[id^=google_ads], .adsbygoogle')"
+                + ".forEach(e => e.remove());");
+    }
+
+    static void open(String path) {
+        driver.get(BASE + path);
+        removeAds();
+    }
+
+    static WebElement scrollTo(By locator) {
+        removeAds();
+        WebElement el = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        return el;
+    }
+
+    static void jsClick(By locator) {
+        WebElement el = scrollTo(locator);
+        wait.until(ExpectedConditions.elementToBeClickable(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+    }
+
+    static void type(By locator, String text) {
+        WebElement el = scrollTo(locator);
+        el.clear();
+        el.sendKeys(text);
+    }
+
+    static String text(By locator) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator)).getText();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        driver.manage().window().maximize();
+        Actions actions = new Actions(driver);
+
+        try {
+            // ---------- 1. Text Box form ----------
+            open("/text-box");
+            type(By.id("userName"), "Radhika Amipara");
+            type(By.id("userEmail"), "radhika@gmail.com");
+            type(By.id("currentAddress"), "Ahmedabad");
+            type(By.id("permanentAddress"), "Gujarat");
+            jsClick(By.id("submit"));
+            String output = text(By.id("output"));
+            check("Name shown in output", output.contains("Radhika Amipara"));
+            check("Email shown in output", output.contains("radhika@gmail.com"));
+            pause();
+
+            // ---------- 2. Buttons ----------
+            open("/buttons");
+            WebElement dbl = scrollTo(By.id("doubleClickBtn"));
+            actions.doubleClick(dbl).perform();
+            check("Double click message", text(By.id("doubleClickMessage")).contains("double click"));
+
+            WebElement right = scrollTo(By.id("rightClickBtn"));
+            actions.contextClick(right).perform();
+            check("Right click message", text(By.id("rightClickMessage")).contains("right click"));
+
+            jsClick(By.xpath("//button[text()='Click Me']"));
+            check("Dynamic click message", text(By.id("dynamicClickMessage")).contains("dynamic click"));
+            pause();
+
+            // ---------- 3. Alerts ----------
+            open("/alerts");
+            jsClick(By.id("alertButton"));
+            Alert alert = wait.until(ExpectedConditions.alertIsPresent());
+            check("Simple alert text", alert.getText().contains("You clicked a button"));
+            alert.accept();
+
+            jsClick(By.id("confirmButton"));
+            alert = wait.until(ExpectedConditions.alertIsPresent());
+            alert.accept();
+            check("Confirm OK result", text(By.id("confirmResult")).contains("Ok"));
+
+            jsClick(By.id("promtButton"));
+            alert = wait.until(ExpectedConditions.alertIsPresent());
+            alert.sendKeys("Radhika");
+            alert.accept();
+            check("Prompt result", text(By.id("promptResult")).contains("Radhika"));
+            pause();
+
+            // ---------- 4. Frames ----------
+            open("/frames");
+            wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt("frame1"));
+            String frameText = text(By.id("sampleHeading"));
+            check("Text inside frame", frameText.equals("This is a sample page"));
+            driver.switchTo().defaultContent();
+            pause();
+
+            // ---------- 5. Browser windows (new tab) ----------
+            open("/browser-windows");
+            String mainWindow = driver.getWindowHandle();
+            jsClick(By.id("tabButton"));
+            wait.until(d -> d.getWindowHandles().size() > 1);
+            for (String handle : new ArrayList<>(driver.getWindowHandles())) {
+                if (!handle.equals(mainWindow)) {
+                    driver.switchTo().window(handle);
+                }
+            }
+            check("New tab heading", text(By.id("sampleHeading")).equals("This is a sample page"));
+            driver.close();
+            driver.switchTo().window(mainWindow);
+            check("Back on main window", driver.getCurrentUrl().contains("browser-windows"));
+
+            Thread.sleep(3000);
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+
+/************* DemoblazeTest **************/
+import java.time.Duration;
+
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class DemoblazeTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() throws InterruptedException {
+        Thread.sleep(1500);
+    }
+
+    static void click(By locator) {
+        WebElement el = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        wait.until(ExpectedConditions.elementToBeClickable(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+    }
+
+    static void type(By locator, String text) {
+        WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        el.clear();
+        el.sendKeys(text);
+    }
+
+    // reads the browser alert text and closes it
+    static String acceptAlert() {
+        Alert alert = wait.until(ExpectedConditions.alertIsPresent());
+        String text = alert.getText();
+        alert.accept();
+        return text;
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        driver.manage().window().maximize();
+
+        String username = "radhika" + System.currentTimeMillis();
+        String password = "Radhika@123";
+
+        try {
+            // 1. Open website
+            driver.get("https://www.demoblaze.com/");
+            check("Home page title is STORE", driver.getTitle().equals("STORE"));
+            pause();
+
+            // 2. Sign up
+            click(By.id("signin2"));
+            type(By.id("sign-username"), username);
+            type(By.id("sign-password"), password);
+            click(By.xpath("//button[text()='Sign up']"));
+            check("Sign up successful", acceptAlert().contains("Sign up successful"));
+            pause();
+
+            // 3. Login
+            click(By.id("login2"));
+            type(By.id("loginusername"), username);
+            type(By.id("loginpassword"), password);
+            click(By.xpath("//button[text()='Log in']"));
+            wait.until(ExpectedConditions.textToBePresentInElementLocated(By.id("nameofuser"), username));
+            check("Login successful (Welcome " + username + ")",
+                    driver.findElement(By.id("nameofuser")).getText().contains(username));
+            pause();
+
+            // 4. Open a product
+            click(By.linkText("Samsung galaxy s6"));
+            String title = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                    By.cssSelector("h2.name"))).getText();
+            check("Product page opened", title.equals("Samsung galaxy s6"));
+            pause();
+
+            // 5. Add to cart
+            click(By.xpath("//a[text()='Add to cart']"));
+            check("Product added to cart", acceptAlert().contains("Product added"));
+            pause();
+
+            // 6. Open cart and verify
+            click(By.id("cartur"));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(
+                    By.xpath("//td[text()='Samsung galaxy s6']")));
+            check("Samsung galaxy s6 is in the cart",
+                    driver.findElement(By.id("tbodyid")).getText().contains("Samsung galaxy s6"));
+            pause();
+
+            // 7. Place order
+            click(By.xpath("//button[text()='Place Order']"));
+            type(By.id("name"), "Radhika Amipara");
+            type(By.id("country"), "India");
+            type(By.id("city"), "Ahmedabad");
+            type(By.id("card"), "4111111111111111");
+            type(By.id("month"), "12");
+            type(By.id("year"), "2030");
+            pause();
+            click(By.xpath("//button[text()='Purchase']"));
+
+            // 8. Confirmation
+            String msg = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                    By.cssSelector(".sweet-alert h2"))).getText();
+            check("Order placed (" + msg + ")", msg.contains("Thank you for your purchase"));
+            pause();
+            click(By.cssSelector("button.confirm"));
+
+            // 9. Logout
+            click(By.id("logout2"));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("login2")));
+            check("Logout successful", driver.findElement(By.id("login2")).isDisplayed());
+
+            Thread.sleep(3000);
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+/************* AutomationExerciseTest  **************/
+import java.time.Duration;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class AutomationExerciseTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String BASE = "https://automationexercise.com/";
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() throws InterruptedException {
+        Thread.sleep(1500);
+    }
+
+    // The site shows ads and a cookie popup. This removes them so they cannot block clicks.
+    static void clearAds() {
+        try {
+            ((JavascriptExecutor) driver).executeScript(
+                "document.querySelectorAll('ins.adsbygoogle, iframe[id^=aswift], #aswift_0_host, .fc-consent-root')"
+                + ".forEach(e => e.remove());");
+        } catch (Exception e) {
+            // ignore
+        }
+    }
+
+    // JS click is stable even when an ad is on the page
+    static void jsClick(By locator) {
+        clearAds();
+        WebElement el = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+    }
+
+    static void type(By locator, String text) {
+        WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        el.clear();
+        el.sendKeys(text);
+    }
+
+    static String text(By locator) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator)).getText();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        driver.manage().window().maximize();
+
+        String email = "radhika" + System.currentTimeMillis() + "@gmail.com";
+        String password = "Radhika@123";
+
+        try {
+            // 1. Open home page
+            driver.get(BASE);
+            check("Home page title contains Automation Exercise", driver.getTitle().contains("Automation Exercise"));
+            pause();
+
+            // 2. Go to Signup / Login
+            jsClick(By.cssSelector("a[href='/login']"));
+            check("Signup form is visible", text(By.xpath("//h2[text()='New User Signup!']")).length() > 0);
+
+            // 3. Signup (name + email)
+            type(By.cssSelector("input[data-qa='signup-name']"), "Radhika");
+            type(By.cssSelector("input[data-qa='signup-email']"), email);
+            jsClick(By.cssSelector("button[data-qa='signup-button']"));
+            check("Account information page opened",
+                    text(By.xpath("//b[text()='Enter Account Information']")).length() > 0);
+
+            // 4. Account information
+            jsClick(By.id("id_gender2"));
+            type(By.id("password"), password);
+            new Select(driver.findElement(By.id("days"))).selectByValue("10");
+            new Select(driver.findElement(By.id("months"))).selectByValue("5");
+            new Select(driver.findElement(By.id("years"))).selectByValue("2000");
+            type(By.id("first_name"), "Radhika");
+            type(By.id("last_name"), "Amipara");
+            type(By.id("company"), "TCS");
+            type(By.id("address1"), "Vaishnodevi, Ahmedabad");
+            new Select(driver.findElement(By.id("country"))).selectByVisibleText("India");
+            type(By.id("state"), "Gujarat");
+            type(By.id("city"), "Ahmedabad");
+            type(By.id("zipcode"), "380001");
+            type(By.id("mobile_number"), "9876543210");
+            jsClick(By.cssSelector("button[data-qa='create-account']"));
+
+            check("Account created",
+                    text(By.cssSelector("h2[data-qa='account-created']")).equalsIgnoreCase("Account Created!"));
+            jsClick(By.cssSelector("a[data-qa='continue-button']"));
+
+            // 5. Logged in check
+            clearAds();
+            String loggedIn = text(By.xpath("//a[contains(text(),'Logged in as')]"));
+            check("Logged in as Radhika", loggedIn.contains("Radhika"));
+            pause();
+
+            // 6. Products page (direct URL avoids ad overlays)
+            driver.get(BASE + "products");
+            clearAds();
+            check("All Products page opened", text(By.xpath("//h2[contains(text(),'All Products')]")).length() > 0);
+
+            // 7. Search a product
+            type(By.id("search_product"), "Blue Top");
+            jsClick(By.id("submit_search"));
+            check("Searched Products heading shown",
+                    text(By.xpath("//h2[contains(text(),'Searched Products')]")).length() > 0);
+            check("Blue Top found in results",
+                    driver.getPageSource().contains("Blue Top"));
+            pause();
+
+            // 8. Add product to cart
+            jsClick(By.cssSelector("a.add-to-cart[data-product-id='1']"));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("cartModal")));
+            check("Added to cart popup shown", text(By.cssSelector("#cartModal .modal-title")).contains("Added"));
+            pause();
+
+            // 9. View cart
+            jsClick(By.xpath("//div[@id='cartModal']//a[@href='/view_cart']"));
+            check("Cart page opened", driver.getCurrentUrl().contains("view_cart"));
+            check("Blue Top is in the cart", text(By.cssSelector("#product-1 .cart_description a")).contains("Blue Top"));
+            pause();
+
+            // 10. Checkout
+            jsClick(By.cssSelector("a.check_out"));
+            check("Review your order page shown",
+                    text(By.xpath("//h2[contains(text(),'Address Details')]")).length() > 0);
+            type(By.name("message"), "Please deliver in the morning");
+            pause();
+            jsClick(By.cssSelector("a[href='/payment']"));
+
+            // 11. Payment
+            type(By.name("name_on_card"), "Radhika Amipara");
+            type(By.name("card_number"), "4111111111111111");
+            type(By.name("cvc"), "123");
+            type(By.name("expiry_month"), "12");
+            type(By.name("expiry_year"), "2030");
+            jsClick(By.id("submit"));
+
+            check("Order placed",
+                    text(By.cssSelector("h2[data-qa='order-placed']")).equalsIgnoreCase("Order Placed!"));
+            pause();
+            jsClick(By.cssSelector("a[data-qa='continue-button']"));
+
+            // 12. Delete account (cleanup)
+            jsClick(By.cssSelector("a[href='/delete_account']"));
+            check("Account deleted",
+                    text(By.cssSelector("h2[data-qa='account-deleted']")).equalsIgnoreCase("Account Deleted!"));
+
+            Thread.sleep(3000);
+
+        } catch (Exception e) {
+            System.out.println("FAIL : Test stopped due to error: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+
+
+/************* UITestingPlaygroundTest ***************/
+import java.time.Duration;
+
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class UITestingPlaygroundTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String BASE = "http://uitestingplayground.com";
+
+    // ===== CHANGE THE SPEED HERE (milliseconds, 1000 = 1 second) =====
+    static final int ACTION_DELAY = 1500;
+    static final int STEP_DELAY = 3000;
+
+    interface Step {
+        void run() throws Exception;
+    }
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() {
+        try {
+            Thread.sleep(STEP_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    static void slow() {
+        try {
+            Thread.sleep(ACTION_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    // runs one part of the test; if it fails, the other parts still run
+    static void section(String name, Step step) {
+        System.out.println("\n--- " + name + " ---");
+        try {
+            step.run();
+        } catch (Exception e) {
+            String msg = e.getMessage() == null ? e.toString() : e.getMessage().split("\n")[0];
+            System.out.println("FAIL : " + name + " stopped: " + msg);
+        }
+        pause();
+    }
+
+    static WebElement scrollTo(By locator) {
+        WebElement el = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        return el;
+    }
+
+    // real mouse click (some pages ignore JavaScript clicks)
+    static void click(By locator) {
+        scrollTo(locator);
+        wait.until(ExpectedConditions.elementToBeClickable(locator)).click();
+        slow();
+    }
+
+    static void type(By locator, String text) {
+        WebElement el = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        el.clear();
+        el.sendKeys(text);
+        slow();
+    }
+
+    static String text(By locator) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator)).getText();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        driver.manage().window().maximize();
+
+        try {
+            // 1. Dynamic ID: the id changes on every page load, so the text is used as locator
+            section("Dynamic ID", () -> {
+                driver.get(BASE + "/dynamicid");
+                By btn = By.xpath("//button[text()='Button with Dynamic ID']");
+                String id1 = wait.until(ExpectedConditions.visibilityOfElementLocated(btn)).getAttribute("id");
+                driver.navigate().refresh();
+                String id2 = wait.until(ExpectedConditions.visibilityOfElementLocated(btn)).getAttribute("id");
+                check("ID changes after refresh (so id is not a good locator)", !id1.equals(id2));
+                click(btn);
+                check("Button found and clicked using its text", true);
+            });
+
+            // 2. Class attribute: the button has several classes
+            section("Class Attribute", () -> {
+                driver.get(BASE + "/classattr");
+                click(By.xpath("//button[contains(concat(' ', normalize-space(@class), ' '), ' btn-primary ')]"));
+                Alert alert = wait.until(ExpectedConditions.alertIsPresent());
+                check("Primary button alert shown", alert.getText().contains("Primary button pressed"));
+                alert.accept();
+            });
+
+            // 3. Click: the page ignores JavaScript clicks, only a real mouse click works
+            section("Click", () -> {
+                driver.get(BASE + "/click");
+                click(By.id("badButton"));
+                String cls = driver.findElement(By.id("badButton")).getAttribute("class");
+                check("Button turned green (btn-success)", cls.contains("btn-success"));
+            });
+
+            // 4. Text input
+            section("Text Input", () -> {
+                driver.get(BASE + "/textinput");
+                type(By.id("newButtonName"), "Radhika");
+                click(By.id("updatingButton"));
+                check("Button text changed to Radhika", text(By.id("updatingButton")).equals("Radhika"));
+            });
+
+            // 5. AJAX data: Fluent Wait (checks every 1 second, ignores 'not found' errors)
+            section("AJAX Data (Fluent Wait)", () -> {
+                driver.get(BASE + "/ajax");
+                click(By.id("ajaxButton"));
+                FluentWait<WebDriver> fluent = new FluentWait<>(driver)
+                        .withTimeout(Duration.ofSeconds(30))
+                        .pollingEvery(Duration.ofSeconds(1))
+                        .ignoring(NoSuchElementException.class);
+                WebElement label = fluent.until(d -> d.findElement(By.cssSelector("p.bg-success")));
+                check("AJAX data loaded", label.getText().contains("Data loaded with AJAX get request."));
+            });
+
+            // 6. Client side delay: Explicit Wait
+            section("Client Side Delay (Explicit Wait)", () -> {
+                driver.get(BASE + "/clientdelay");
+                click(By.id("ajaxButton"));
+                wait.until(ExpectedConditions.textToBePresentInElementLocated(
+                        By.cssSelector("p.bg-success"), "Data calculated on the client side."));
+                check("Client side data calculated", true);
+            });
+
+            // 7. Hidden layers: after the first click a blue button covers the green one
+            section("Hidden Layers", () -> {
+                driver.get(BASE + "/hiddenlayers");
+                click(By.id("greenButton"));
+                check("Blue button appeared over the green button",
+                        driver.findElements(By.id("blueButton")).size() == 1);
+            });
+
+            // 8. Sample app: login
+            section("Sample App Login", () -> {
+                driver.get(BASE + "/sampleapp");
+                type(By.name("UserName"), "Radhika");
+                type(By.name("Password"), "wrong");
+                click(By.id("login"));
+                check("Invalid login message", text(By.id("loginstatus")).contains("Invalid username/password"));
+
+                type(By.name("Password"), "pwd");
+                click(By.id("login"));
+                check("Login successful", text(By.id("loginstatus")).equals("Welcome, Radhika!"));
+
+                click(By.id("login"));
+                check("Logout successful", text(By.id("loginstatus")).equals("User logged out."));
+            });
+
+            Thread.sleep(5000);
+
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+
+/************* TestAutomationPracticeTest  ***************/
+import java.time.Duration;
+import java.util.List;
+
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class TestAutomationPracticeTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String URL = "https://testautomationpractice.blogspot.com/";
+
+    // ===== CHANGE THE SPEED HERE (milliseconds, 1000 = 1 second) =====
+    static final int ACTION_DELAY = 1500;
+    static final int STEP_DELAY = 3000;
+
+    interface Step {
+        void run() throws Exception;
+    }
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() {
+        try {
+            Thread.sleep(STEP_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    static void slow() {
+        try {
+            Thread.sleep(ACTION_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    // runs one part of the test; if it fails, the other parts still run
+    static void section(String name, Step step) {
+        System.out.println("\n--- " + name + " ---");
+        try {
+            step.run();
+        } catch (Exception e) {
+            String msg = e.getMessage() == null ? e.toString() : e.getMessage().split("\n")[0];
+            System.out.println("FAIL : " + name + " stopped: " + msg);
+        }
+        pause();
+    }
+
+    static WebElement scrollTo(By locator) {
+        WebElement el = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        return el;
+    }
+
+    static void click(By locator) {
+        WebElement el = scrollTo(locator);
+        wait.until(ExpectedConditions.elementToBeClickable(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+        slow();
+    }
+
+    static void type(By locator, String text) {
+        WebElement el = scrollTo(locator);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        el.clear();
+        el.sendKeys(text);
+        slow();
+    }
+
+    static String text(By locator) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator)).getText();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        driver.manage().window().maximize();
+
+        try {
+            driver.get(URL);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("name")));
+            check("Practice page opened", driver.getCurrentUrl().contains("testautomationpractice"));
+            pause();
+
+            // 1. Form fields
+            section("Form fields", () -> {
+                type(By.id("name"), "Radhika Amipara");
+                type(By.id("email"), "radhika@gmail.com");
+                type(By.id("phone"), "9876543210");
+                type(By.id("textarea"), "Ahmedabad, Gujarat");
+                check("Name typed", driver.findElement(By.id("name")).getAttribute("value").equals("Radhika Amipara"));
+
+                click(By.id("female"));
+                check("Female radio selected", driver.findElement(By.id("female")).isSelected());
+
+                click(By.id("sunday"));
+                check("Sunday checkbox selected", driver.findElement(By.id("sunday")).isSelected());
+            });
+
+            // 2. Dropdown
+            section("Dropdown", () -> {
+                Select country = new Select(scrollTo(By.id("country")));
+                country.selectByVisibleText("India");
+                slow();
+                check("Country is India", country.getFirstSelectedOption().getText().equals("India"));
+            });
+
+            // 3. Alerts
+            section("Alerts", () -> {
+                click(By.id("alertBtn"));
+                Alert alert = wait.until(ExpectedConditions.alertIsPresent());
+                check("Simple alert shown", alert.getText().length() > 0);
+                alert.accept();
+
+                click(By.id("confirmBtn"));
+                alert = wait.until(ExpectedConditions.alertIsPresent());
+                alert.accept();
+                check("Confirm OK result", text(By.id("demo")).contains("OK"));
+
+                click(By.id("promptBtn"));
+                alert = wait.until(ExpectedConditions.alertIsPresent());
+                alert.sendKeys("Radhika");
+                alert.accept();
+                check("Prompt result contains name", text(By.id("demo")).contains("Radhika"));
+            });
+
+            // 4. Double click
+            section("Double click", () -> {
+                WebElement copyBtn = scrollTo(By.xpath("//button[text()='Copy Text']"));
+                new Actions(driver).doubleClick(copyBtn).perform();
+                slow();
+                String f1 = driver.findElement(By.id("field1")).getAttribute("value");
+                String f2 = driver.findElement(By.id("field2")).getAttribute("value");
+                check("Text copied to field 2 (" + f2 + ")", f1.equals(f2));
+            });
+
+            // 5. Drag and drop
+            section("Drag and drop", () -> {
+                WebElement drag = scrollTo(By.id("draggable"));
+                WebElement drop = driver.findElement(By.id("droppable"));
+                new Actions(driver).dragAndDrop(drag, drop).perform();
+                slow();
+                check("Dropped! message shown", text(By.id("droppable")).contains("Dropped"));
+            });
+
+            // 6. Web table
+            section("Web table", () -> {
+                scrollTo(By.name("BookTable"));
+                List<WebElement> rows = driver.findElements(By.cssSelector("table[name='BookTable'] tr"));
+                System.out.println("Rows in table (with header): " + rows.size());
+                for (WebElement row : rows) {
+                    System.out.println("  " + row.getText());
+                }
+                check("Table has data rows", rows.size() > 1);
+                check("Table contains Learn Selenium",
+                        driver.findElement(By.name("BookTable")).getText().contains("Learn Selenium"));
+            });
+
+            // 7. Mouse hover
+            section("Mouse hover", () -> {
+                WebElement hover = scrollTo(By.cssSelector(".dropbtn"));
+                new Actions(driver).moveToElement(hover).perform();
+                slow();
+                List<WebElement> items = driver.findElements(By.cssSelector(".dropdown-content a"));
+                check("Hover menu items shown (" + items.size() + ")",
+                        items.size() > 0 && items.get(0).isDisplayed());
+            });
+
+            Thread.sleep(5000);
+
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+
+/************* LetCodeTest  ***************/
+import java.time.Duration;
+import java.util.List;
+
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class LetCodeTest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String BASE = "https://letcode.in";
+
+    // ===== CHANGE THE SPEED HERE (milliseconds, 1000 = 1 second) =====
+    static final int ACTION_DELAY = 1500;
+    static final int STEP_DELAY = 3000;
+
+    interface Step {
+        void run() throws Exception;
+    }
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() {
+        try {
+            Thread.sleep(STEP_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    static void slow() {
+        try {
+            Thread.sleep(ACTION_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    static void section(String name, Step step) {
+        System.out.println("\n--- " + name + " ---");
+        try {
+            step.run();
+        } catch (Exception e) {
+            String msg = e.getMessage() == null ? e.toString() : e.getMessage().split("\n")[0];
+            System.out.println("FAIL : " + name + " stopped: " + msg);
+        }
+        pause();
+    }
+
+    static WebElement scrollTo(By locator) {
+        WebElement el = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        return el;
+    }
+
+    static void click(By locator) {
+        WebElement el = scrollTo(locator);
+        wait.until(ExpectedConditions.elementToBeClickable(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", el);
+        slow();
+    }
+
+    static void type(By locator, String text) {
+        WebElement el = scrollTo(locator);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        el.clear();
+        el.sendKeys(text);
+        slow();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        driver.manage().window().maximize();
+
+        try {
+            // 1. Input fields
+            section("Edit (input fields)", () -> {
+                driver.get(BASE + "/edit");
+                type(By.id("fullName"), "Radhika Amipara");
+                check("Full name typed",
+                        driver.findElement(By.id("fullName")).getAttribute("value").equals("Radhika Amipara"));
+
+                WebElement append = scrollTo(By.id("join"));
+                append.sendKeys(" Person");
+                slow();
+                check("Text appended", append.getAttribute("value").contains("Person"));
+
+                String shown = scrollTo(By.id("getMe")).getAttribute("value");
+                check("Text read from field: " + shown, shown != null && shown.length() > 0);
+
+                WebElement clearMe = scrollTo(By.id("clearMe"));
+                clearMe.clear();
+                slow();
+                check("Field cleared", clearMe.getAttribute("value").isEmpty());
+
+                check("Disabled field is not enabled", !scrollTo(By.id("noEdit")).isEnabled());
+                check("Read only field has readonly attribute",
+                        scrollTo(By.id("dontwrite")).getAttribute("readonly") != null);
+            });
+
+            // 2. Dropdown
+            section("Dropdown", () -> {
+                driver.get(BASE + "/dropdowns");
+                Select fruits = new Select(scrollTo(By.id("fruits")));
+                fruits.selectByVisibleText("Banana");
+                slow();
+                check("Fruit selected is Banana", fruits.getFirstSelectedOption().getText().equals("Banana"));
+                check("Dropdown has options (" + fruits.getOptions().size() + ")", fruits.getOptions().size() > 1);
+            });
+
+            // 3. Alerts
+            section("Alerts", () -> {
+                driver.get(BASE + "/alert");
+                click(By.id("accept"));
+                Alert alert = wait.until(ExpectedConditions.alertIsPresent());
+                check("Simple alert shown: " + alert.getText(), alert.getText().length() > 0);
+                alert.accept();
+
+                click(By.id("confirm"));
+                alert = wait.until(ExpectedConditions.alertIsPresent());
+                check("Confirm alert shown: " + alert.getText(), alert.getText().length() > 0);
+                alert.dismiss();
+
+                click(By.id("prompt"));
+                alert = wait.until(ExpectedConditions.alertIsPresent());
+                alert.sendKeys("Radhika");
+                alert.accept();
+                wait.until(ExpectedConditions.textToBePresentInElementLocated(By.tagName("body"), "Radhika"));
+                check("Prompt value shown on page", true);
+            });
+
+            // 4. Web table
+            section("Web table", () -> {
+                driver.get(BASE + "/table");
+                wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#simpletable tbody tr")));
+                List<WebElement> rows = driver.findElements(By.cssSelector("#simpletable tbody tr"));
+                System.out.println("Rows in table: " + rows.size());
+                for (WebElement row : rows) {
+                    System.out.println("  " + row.getText());
+                }
+                check("Table has rows", rows.size() > 0);
+            });
+
+            Thread.sleep(5000);
+
+        } finally {
+            driver.quit();
+        }
+    }
+}
+
+
+
+
+
+/************* GlobalSQATest   ***************/
+import java.time.Duration;
+import java.util.List;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class GlobalSQATest {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
+    static final String BASE = "https://www.globalsqa.com/demo-site/";
+
+    // ===== CHANGE THE SPEED HERE (milliseconds, 1000 = 1 second) =====
+    static final int ACTION_DELAY = 1500;
+    static final int STEP_DELAY = 3000;
+
+    interface Step {
+        void run() throws Exception;
+    }
+
+    static void check(String step, boolean condition) {
+        System.out.println((condition ? "PASS : " : "FAIL : ") + step);
+    }
+
+    static void pause() {
+        try {
+            Thread.sleep(STEP_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    static void slow() {
+        try {
+            Thread.sleep(ACTION_DELAY);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    static void section(String name, Step step) {
+        System.out.println("\n--- " + name + " ---");
+        try {
+            step.run();
+        } catch (Exception e) {
+            String msg = e.getMessage() == null ? e.toString() : e.getMessage().split("\n")[0];
+            System.out.println("FAIL : " + name + " stopped: " + msg);
+        }
+        driver.switchTo().defaultContent();
+        pause();
+    }
+
+    static WebElement scrollTo(By locator) {
+        WebElement el = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+        return el;
+    }
+
+    // the demos are inside an iframe: switch to the first visible demo frame
+    static void switchToDemoFrame() {
+        wait.until(d -> !d.findElements(By.cssSelector("iframe.demo-frame")).isEmpty());
+        List<WebElement> frames = driver.findElements(By.cssSelector("iframe.demo-frame"));
+        for (WebElement f : frames) {
+            if (f.isDisplayed()) {
+                ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", f);
+                driver.switchTo().frame(f);
+                return;
+            }
+        }
+        driver.switchTo().frame(frames.get(0));
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--disable-notifications");
+
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        driver.manage().window().maximize();
+
+        try {
+            // 1. Date picker
+            section("Date picker", () -> {
+                driver.get(BASE + "datepicker/");
+                check("Date picker page opened", driver.getCurrentUrl().contains("datepicker"));
+                switchToDemoFrame();
+                WebElement input = wait.until(ExpectedConditions.elementToBeClickable(By.id("datepicker")));
+                input.click();
+                slow();
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("ui-datepicker-calendar")));
+                driver.findElement(By.xpath("//table[@class='ui-datepicker-calendar']//a[text()='15']")).click();
+                slow();
+                String value = driver.findElement(By.id("datepicker")).getAttribute("value");
+                check("Date selected: " + value, value != null && value.contains("15"));
+            });
+
+            // 2. Drag and drop (photo manager: drag a photo to the trash)
+            section("Drag and drop", () -> {
+                driver.get(BASE + "draganddrop/");
+                check("Drag and drop page opened", driver.getCurrentUrl().contains("draganddrop"));
+                switchToDemoFrame();
+                wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#gallery li")));
+                int before = driver.findElements(By.cssSelector("#gallery li")).size();
+                WebElement photo = driver.findElement(By.cssSelector("#gallery li"));
+                WebElement trash = driver.findElement(By.id("trash"));
+                new Actions(driver).clickAndHold(photo).moveByOffset(10, 10)
+                        .moveToElement(trash).pause(Duration.ofMillis(500)).release().perform();
+                slow();
+                int after = driver.findElements(By.cssSelector("#gallery li")).size();
+                check("Photo moved to trash (" + before + " -> " + after + ")", after < before);
+            });
+
+            // 3. Tabs
+            section("Tabs", () -> {
+                driver.get(BASE + "tabs/");
+                check("Tabs page opened", driver.getCurrentUrl().contains("tabs"));
+                switchToDemoFrame();
+                wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("a[href='#tabs-2']"))).click();
+                slow();
+                check("Second tab content is visible",
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("tabs-2"))).isDisplayed());
+                driver.findElement(By.cssSelector("a[href='#tabs-3']")).click();
+                slow();
+                check("Third tab content is visible",
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("tabs-3"))).isDisplayed());
+            });
+
+            Thread.sleep(5000);
+
+        } finally {
+            driver.quit();
+        }
+    }
+}
